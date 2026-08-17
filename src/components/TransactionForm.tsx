@@ -21,9 +21,10 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
-import { CURRENCY_LIST } from "@/lib/currency"
+import { CURRENCY_LIST, formatMoney } from "@/lib/currency"
 import type { CurrencyCode, TransactionType } from "@/types"
 import type { FinanceStore } from "@/hooks/useFinance"
+import type { RatesStore } from "@/hooks/useRates"
 
 function todayISO(): string {
   const now = new Date()
@@ -31,7 +32,13 @@ function todayISO(): string {
   return new Date(now.getTime() - offset * 60000).toISOString().slice(0, 10)
 }
 
-export function TransactionForm({ store }: { store: FinanceStore }) {
+export function TransactionForm({
+  store,
+  rates,
+}: {
+  store: FinanceStore
+  rates: RatesStore
+}) {
   const { categories, addTransaction } = store
   const [open, setOpen] = useState(false)
 
@@ -83,7 +90,7 @@ export function TransactionForm({ store }: { store: FinanceStore }) {
     >
       <DialogTrigger asChild>
         <Button>
-          <Plus /> Novo lançamento
+          <Plus /> <span className="hidden sm:inline">Novo lançamento</span>
         </Button>
       </DialogTrigger>
       <DialogContent>
@@ -156,6 +163,21 @@ export function TransactionForm({ store }: { store: FinanceStore }) {
               </Select>
             </div>
           </div>
+
+          {currency !== "BRL" &&
+            (() => {
+              const value = Number(amount.replace(",", "."))
+              if (!Number.isFinite(value) || value <= 0) return null
+              return (
+                <p className="-mt-1 text-sm text-muted-foreground">
+                  ≈{" "}
+                  <span className="font-medium text-foreground">
+                    {formatMoney(rates.convertToBRL(value, currency), "BRL")}
+                  </span>{" "}
+                  na cotação atual
+                </p>
+              )
+            })()}
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">

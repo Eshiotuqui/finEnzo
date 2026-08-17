@@ -14,13 +14,20 @@ import { chartColor } from "@/lib/colors"
 import { formatMoney } from "@/lib/currency"
 import { cn } from "@/lib/utils"
 import type { FinanceStore } from "@/hooks/useFinance"
+import type { RatesStore } from "@/hooks/useRates"
 
 function formatDate(iso: string): string {
   const [y, m, d] = iso.split("-")
   return `${d}/${m}/${y}`
 }
 
-export function TransactionList({ store }: { store: FinanceStore }) {
+export function TransactionList({
+  store,
+  rates,
+}: {
+  store: FinanceStore
+  rates: RatesStore
+}) {
   const { transactions, categoriesById, categories, deleteTransaction } = store
   const [filter, setFilter] = useState("all")
 
@@ -31,10 +38,10 @@ export function TransactionList({ store }: { store: FinanceStore }) {
 
   return (
     <Card>
-      <CardHeader className="flex-row items-center justify-between space-y-0">
+      <CardHeader className="flex-col gap-3 space-y-0 sm:flex-row sm:items-center sm:justify-between">
         <CardTitle>Lançamentos</CardTitle>
         <Select value={filter} onValueChange={setFilter}>
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger className="w-full sm:w-[180px]">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -76,17 +83,24 @@ export function TransactionList({ store }: { store: FinanceStore }) {
                       {cat?.name ?? "Sem categoria"} · {formatDate(t.date)}
                     </p>
                   </div>
-                  <span
-                    className={cn(
-                      "shrink-0 text-sm font-semibold tabular-nums",
-                      isExpense
-                        ? "text-destructive"
-                        : "text-emerald-600 dark:text-emerald-400"
+                  <div className="shrink-0 text-right">
+                    <span
+                      className={cn(
+                        "text-sm font-semibold tabular-nums",
+                        isExpense
+                          ? "text-destructive"
+                          : "text-emerald-600 dark:text-emerald-400"
+                      )}
+                    >
+                      {isExpense ? "-" : "+"}
+                      {formatMoney(t.amount, t.currency)}
+                    </span>
+                    {t.currency !== "BRL" && (
+                      <p className="text-xs text-muted-foreground tabular-nums">
+                        ≈ {formatMoney(rates.convertToBRL(t.amount, t.currency), "BRL")}
+                      </p>
                     )}
-                  >
-                    {isExpense ? "-" : "+"}
-                    {formatMoney(t.amount, t.currency)}
-                  </span>
+                  </div>
                   <Button
                     variant="ghost"
                     size="icon"
