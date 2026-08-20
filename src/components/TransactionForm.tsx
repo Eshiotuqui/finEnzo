@@ -174,8 +174,8 @@ export function TransactionForm({
             />
           </div>
 
-          <div className="grid grid-cols-[1fr_120px] gap-3">
-            <div className="space-y-1.5">
+          <div className="grid grid-cols-[minmax(0,1fr)_112px] gap-3">
+            <div className="min-w-0 space-y-1.5">
               <Label htmlFor="tx-amount">Valor</Label>
               <Input
                 id="tx-amount"
@@ -185,7 +185,7 @@ export function TransactionForm({
                 onChange={(e) => setAmount(e.target.value)}
               />
             </div>
-            <div className="space-y-1.5">
+            <div className="min-w-0 space-y-1.5">
               <Label>Moeda</Label>
               <Select
                 value={currency}
@@ -220,8 +220,8 @@ export function TransactionForm({
               )
             })()}
 
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="min-w-0 space-y-1.5">
               <Label>Categoria</Label>
               <Select value={categoryId} onValueChange={setCategoryId}>
                 <SelectTrigger>
@@ -236,7 +236,7 @@ export function TransactionForm({
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-1.5">
+            <div className="min-w-0 space-y-1.5">
               <Label htmlFor="tx-date">Data</Label>
               <Input
                 id="tx-date"

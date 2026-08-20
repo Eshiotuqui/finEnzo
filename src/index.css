@@ -116,6 +116,31 @@
   }
 
   /*
+   * O campo de data no iOS tem largura intrínseca e ignora a caixa,
+   * estourando o layout. Aqui ele volta a se comportar como um input normal.
+   */
+  input[type="date"] {
+    -webkit-appearance: none;
+    appearance: none;
+    min-width: 0;
+    max-width: 100%;
+  }
+  input[type="date"]::-webkit-date-and-time-value {
+    text-align: left;
+    margin: 0;
+    min-width: 0;
+  }
+  input[type="date"]::-webkit-datetime-edit {
+    padding: 0;
+    overflow: hidden;
+  }
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    margin-inline-start: 0;
+    opacity: 0.6;
+    cursor: pointer;
+  }
+
+  /*
    * Fundo de ondas: listras onduladas atrás de todo o conteúdo.
    * A onda é uma máscara, então a cor vem de --wave e acompanha o tema.
    */
