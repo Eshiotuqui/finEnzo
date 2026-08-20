@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
 import { CURRENCY_LIST, formatMoney } from "@/lib/currency"
-import type { CurrencyCode, TransactionType } from "@/types"
+import type { CurrencyCode, Transaction, TransactionType } from "@/types"
 import type { FinanceStore } from "@/hooks/useFinance"
 import type { RatesStore } from "@/hooks/useRates"
 
@@ -38,6 +38,7 @@ export function TransactionForm({
   open: openProp,
   onOpenChange,
   trigger,
+  transaction,
 }: {
   store: FinanceStore
   rates: RatesStore
@@ -46,8 +47,14 @@ export function TransactionForm({
   onOpenChange?: (open: boolean) => void
   /** `null` esconde o gatilho — use junto com `open`. */
   trigger?: React.ReactNode | null
+  /**
+   * Lançamento a editar. Como os campos são inicializados a partir dele, quem
+   * usa este modo deve remontar o componente (`key={transaction.id}`).
+   */
+  transaction?: Transaction | null
 }) {
-  const { categories, addTransaction } = store
+  const { categories, addTransaction, updateTransaction } = store
+  const editing = Boolean(transaction)
   const [uncontrolledOpen, setUncontrolledOpen] = useState(false)
   const open = openProp ?? uncontrolledOpen
   const setOpen = (value: boolean) => {
@@ -55,15 +62,24 @@ export function TransactionForm({
     onOpenChange?.(value)
   }
 
-  const [type, setType] = useState<TransactionType>("expense")
-  const [description, setDescription] = useState("")
-  const [amount, setAmount] = useState("")
-  const [currency, setCurrency] = useState<CurrencyCode>("BRL")
-  const [categoryId, setCategoryId] = useState(categories[0]?.id ?? "")
-  const [date, setDate] = useState(todayISO())
+  const [type, setType] = useState<TransactionType>(
+    transaction?.type ?? "expense"
+  )
+  const [description, setDescription] = useState(transaction?.description ?? "")
+  const [amount, setAmount] = useState(
+    transaction ? String(transaction.amount).replace(".", ",") : ""
+  )
+  const [currency, setCurrency] = useState<CurrencyCode>(
+    transaction?.currency ?? "BRL"
+  )
+  const [categoryId, setCategoryId] = useState(
+    transaction?.categoryId ?? categories[0]?.id ?? ""
+  )
+  const [date, setDate] = useState(transaction?.date ?? todayISO())
   const [error, setError] = useState("")
 
   function reset() {
+    if (transaction) return // em edição os campos vêm do lançamento
     setType("expense")
     setDescription("")
     setAmount("")
@@ -81,14 +97,18 @@ export function TransactionForm({
       return setError("Informe um valor maior que zero.")
     if (!categoryId) return setError("Selecione uma categoria.")
 
-    addTransaction({
+    const payload = {
       description: description.trim(),
       amount: value,
       currency,
       type,
       categoryId,
       date,
-    })
+    }
+
+    if (transaction) updateTransaction(transaction.id, payload)
+    else addTransaction(payload)
+
     reset()
     setOpen(false)
   }
@@ -112,9 +132,13 @@ export function TransactionForm({
       )}
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Novo lançamento</DialogTitle>
+          <DialogTitle>
+            {editing ? "Editar lançamento" : "Novo lançamento"}
+          </DialogTitle>
           <DialogDescription>
-            Cadastre um gasto ou uma entrada de dinheiro.
+            {editing
+              ? "Ajuste os dados e salve as alterações."
+              : "Cadastre um gasto ou uma entrada de dinheiro."}
           </DialogDescription>
         </DialogHeader>
 
@@ -227,7 +251,7 @@ export function TransactionForm({
 
           <DialogFooter>
             <Button type="submit" className="w-full sm:w-auto">
-              Salvar lançamento
+              {editing ? "Salvar alterações" : "Salvar lançamento"}
             </Button>
           </DialogFooter>
         </form>

@@ -1,4 +1,4 @@
--- finEnzo — esquema de sincronização entre dispositivos.
+-- Whalio — esquema de sincronização entre dispositivos.
 -- Rode este SQL uma vez no seu projeto Supabase (SQL Editor → New query → Run).
 
 create table if not exists public.categories (

@@ -1,4 +1,4 @@
-# finEnzo 💸
+# Whalio 🐋
 
 Gerenciador financeiro pessoal — cadastre seus gastos e entradas, escolha a moeda
 (Real, Dólar ou Euro), organize por categorias e acompanhe tudo em gráficos.

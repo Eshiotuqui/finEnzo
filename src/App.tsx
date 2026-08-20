@@ -1,6 +1,8 @@
-import { Moon, Sun, Wallet } from "lucide-react"
+import { Moon, Sun } from "lucide-react"
 
 import { AccountDialog, SyncBadge } from "@/components/AccountDialog"
+import { WhaleMark } from "@/components/WhaleMark"
+import { ReloadButton } from "@/components/ReloadButton"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { SummaryCards } from "@/components/SummaryCards"
@@ -41,16 +43,17 @@ function App() {
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-2 px-4 py-3">
           <div className="flex min-w-0 items-center gap-2">
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-              <Wallet className="h-5 w-5" />
+              <WhaleMark className="h-6 w-6" />
             </span>
             <div className="min-w-0">
-              <h1 className="text-lg font-bold leading-none">finEnzo</h1>
+              <h1 className="text-lg font-bold leading-none tracking-tight">Whalio</h1>
               <SyncBadge auth={auth} status={store.syncStatus} className="mt-1" />
             </div>
           </div>
           <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
             <CategoryManager store={store} />
             <TransactionForm store={store} rates={rates} />
+            <ReloadButton store={store} rates={rates} />
             <AccountDialog auth={auth} store={store} />
             <Button variant="ghost" size="icon" onClick={toggle}>
               {theme === "dark" ? <Sun /> : <Moon />}
@@ -80,8 +83,8 @@ function App() {
 
       <footer className="mx-auto max-w-6xl px-4 pb-8 pt-2 text-center text-xs text-muted-foreground">
         {auth.userId
-          ? "Dados sincronizados na sua conta · finEnzo"
-          : "Dados salvos localmente no seu navegador · finEnzo"}
+          ? "🐋 Whalio · seus lançamentos nadam entre os seus aparelhos"
+          : "🐋 Whalio · dados salvos localmente no seu navegador"}
       </footer>
     </div>
   )

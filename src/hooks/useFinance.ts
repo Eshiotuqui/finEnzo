@@ -18,6 +18,9 @@ export type SyncStatus = "off" | "syncing" | "synced" | "error"
 /** Sem conta, os dados ficam no escopo "local" do navegador. */
 const LOCAL_SCOPE = "local"
 
+// As chaves mantêm o prefixo "finenzo:" de propósito: renomear para "whalio:"
+// faria quem já usava o app perder os lançamentos guardados no navegador.
+
 function categoriesKey(scope: string) {
   return scope === LOCAL_SCOPE
     ? "finenzo:categories"
@@ -399,6 +402,24 @@ export function useFinance(userId: string | null) {
     [push]
   )
 
+  const updateTransaction = useCallback(
+    (id: string, patch: Partial<Omit<Transaction, "id" | "createdAt">>) => {
+      const current = dataRef.current.transactions.find((t) => t.id === id)
+      if (!current) return
+      const updated: Transaction = { ...current, ...patch }
+      setData((prev) => ({
+        ...prev,
+        transactions: prev.transactions
+          .map((t) => (t.id === id ? updated : t))
+          .sort(byDateDesc),
+      }))
+      void push((client, uid) =>
+        client.from("transactions").upsert(transactionRow(updated, uid))
+      )
+    },
+    [push]
+  )
+
   const deleteTransaction = useCallback(
     (id: string) => {
       setData((prev) => ({
@@ -428,6 +449,7 @@ export function useFinance(userId: string | null) {
     updateCategory,
     deleteCategory,
     addTransaction,
+    updateTransaction,
     deleteTransaction,
   }
 }

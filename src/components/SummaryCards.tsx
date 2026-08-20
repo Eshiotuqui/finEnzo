@@ -1,5 +1,6 @@
-import { TrendingDown, TrendingUp, Wallet, Coins } from "lucide-react"
+import { TrendingDown, TrendingUp, Coins } from "lucide-react"
 
+import { WhaleMark } from "@/components/WhaleMark"
 import { Card, CardContent } from "@/components/ui/card"
 import { CURRENCIES, formatMoney } from "@/lib/currency"
 import { totalsByCurrency } from "@/lib/stats"
@@ -20,8 +21,8 @@ export function SummaryCards({
     return (
       <Card>
         <CardContent className="flex flex-col items-center justify-center gap-2 py-12 text-center">
-          <Wallet className="h-8 w-8 text-muted-foreground" />
-          <p className="font-medium">Nenhum lançamento ainda</p>
+          <WhaleMark className="h-10 w-10 text-muted-foreground" />
+          <p className="font-medium">Mar calmo por aqui</p>
           <p className="text-sm text-muted-foreground">
             Clique em “Novo lançamento” para começar a registrar suas finanças.
           </p>

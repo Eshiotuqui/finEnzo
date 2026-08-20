@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react"
-import { Trash2 } from "lucide-react"
+import { Pencil, Trash2 } from "lucide-react"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -10,9 +10,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { TransactionForm } from "@/components/TransactionForm"
 import { chartColor } from "@/lib/colors"
 import { formatMoney } from "@/lib/currency"
 import { cn } from "@/lib/utils"
+import type { Transaction } from "@/types"
 import type { FinanceStore } from "@/hooks/useFinance"
 import type { RatesStore } from "@/hooks/useRates"
 
@@ -30,6 +32,7 @@ export function TransactionList({
 }) {
   const { transactions, categoriesById, categories, deleteTransaction } = store
   const [filter, setFilter] = useState("all")
+  const [editing, setEditing] = useState<Transaction | null>(null)
 
   const filtered = useMemo(() => {
     if (filter === "all") return transactions
@@ -101,20 +104,47 @@ export function TransactionList({
                       </p>
                     )}
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="shrink-0 text-muted-foreground hover:text-destructive"
-                    onClick={() => deleteTransaction(t.id)}
-                  >
-                    <Trash2 />
-                  </Button>
+                  <div className="flex shrink-0 items-center">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-muted-foreground hover:text-foreground"
+                      onClick={() => setEditing(t)}
+                      aria-label={`Editar ${t.description}`}
+                    >
+                      <Pencil />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-muted-foreground hover:text-destructive"
+                      onClick={() => deleteTransaction(t.id)}
+                      aria-label={`Excluir ${t.description}`}
+                    >
+                      <Trash2 />
+                    </Button>
+                  </div>
                 </li>
               )
             })}
           </ul>
         )}
       </CardContent>
+
+      {/* Remontado a cada lançamento para que os campos venham preenchidos. */}
+      {editing && (
+        <TransactionForm
+          key={editing.id}
+          store={store}
+          rates={rates}
+          transaction={editing}
+          open
+          onOpenChange={(v) => {
+            if (!v) setEditing(null)
+          }}
+          trigger={null}
+        />
+      )}
     </Card>
   )
 }

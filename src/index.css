@@ -5,59 +5,67 @@
 
 :root {
   --radius: 0.75rem;
-  --background: oklch(0.99 0.002 240);
-  --foreground: oklch(0.15 0.01 260);
+  /* Claro: branco com tons de azul suaves, como espuma na superfície. */
+  --background: oklch(0.98 0.012 232);
+  --foreground: oklch(0.19 0.045 250);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.15 0.01 260);
+  --card-foreground: oklch(0.19 0.045 250);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.15 0.01 260);
-  --primary: oklch(0.55 0.2 265);
-  --primary-foreground: oklch(0.98 0.005 260);
-  --secondary: oklch(0.96 0.01 260);
-  --secondary-foreground: oklch(0.2 0.02 265);
-  --muted: oklch(0.96 0.01 260);
-  --muted-foreground: oklch(0.52 0.02 260);
-  --accent: oklch(0.95 0.02 265);
-  --accent-foreground: oklch(0.2 0.02 265);
+  --popover-foreground: oklch(0.19 0.045 250);
+  --primary: oklch(0.5 0.14 240);
+  --primary-foreground: oklch(0.99 0.008 232);
+  --secondary: oklch(0.955 0.022 232);
+  --secondary-foreground: oklch(0.26 0.06 248);
+  --muted: oklch(0.955 0.022 232);
+  --muted-foreground: oklch(0.52 0.045 240);
+  --accent: oklch(0.925 0.038 232);
+  --accent-foreground: oklch(0.26 0.06 248);
   --destructive: oklch(0.58 0.22 25);
-  --destructive-foreground: oklch(0.98 0.005 260);
-  --border: oklch(0.9 0.01 260);
-  --input: oklch(0.9 0.01 260);
-  --ring: oklch(0.55 0.2 265);
-  --chart-1: oklch(0.6 0.22 265);
-  --chart-2: oklch(0.65 0.18 160);
-  --chart-3: oklch(0.7 0.18 60);
-  --chart-4: oklch(0.62 0.22 25);
-  --chart-5: oklch(0.6 0.2 320);
-  --chart-6: oklch(0.68 0.15 200);
+  --destructive-foreground: oklch(0.99 0.008 232);
+  --border: oklch(0.9 0.028 232);
+  --input: oklch(0.9 0.028 232);
+  --ring: oklch(0.5 0.14 240);
+  --chart-1: oklch(0.56 0.14 240);
+  --chart-2: oklch(0.68 0.13 205);
+  --chart-3: oklch(0.74 0.14 85);
+  --chart-4: oklch(0.62 0.19 25);
+  --chart-5: oklch(0.6 0.16 295);
+  --chart-6: oklch(0.66 0.13 160);
+  /* Ondas do fundo */
+  --wave: oklch(0.86 0.05 235);
+  --wave-opacity: 0.55;
 }
 
 .dark {
-  --background: oklch(0.16 0.01 260);
-  --foreground: oklch(0.96 0.005 260);
-  --card: oklch(0.2 0.012 260);
-  --card-foreground: oklch(0.96 0.005 260);
-  --popover: oklch(0.2 0.012 260);
-  --popover-foreground: oklch(0.96 0.005 260);
-  --primary: oklch(0.68 0.18 265);
-  --primary-foreground: oklch(0.16 0.01 260);
-  --secondary: oklch(0.26 0.015 260);
-  --secondary-foreground: oklch(0.96 0.005 260);
-  --muted: oklch(0.26 0.015 260);
-  --muted-foreground: oklch(0.68 0.015 260);
-  --accent: oklch(0.3 0.02 265);
-  --accent-foreground: oklch(0.96 0.005 260);
+  /* Escuro: azul-marinho profundo, tudo em tons de azul. */
+  --background: oklch(0.185 0.04 250);
+  --foreground: oklch(0.95 0.018 230);
+  --card: oklch(0.235 0.042 250);
+  --card-foreground: oklch(0.95 0.018 230);
+  --popover: oklch(0.235 0.042 250);
+  --popover-foreground: oklch(0.95 0.018 230);
+  --primary: oklch(0.68 0.15 235);
+  --primary-foreground: oklch(0.15 0.04 250);
+  --secondary: oklch(0.29 0.045 250);
+  --secondary-foreground: oklch(0.95 0.018 230);
+  --muted: oklch(0.29 0.045 250);
+  --muted-foreground: oklch(0.75 0.04 234);
+  --accent: oklch(0.34 0.05 246);
+  --accent-foreground: oklch(0.95 0.018 230);
   --destructive: oklch(0.65 0.2 25);
-  --destructive-foreground: oklch(0.98 0.005 260);
-  --border: oklch(0.3 0.015 260);
-  --input: oklch(0.32 0.015 260);
-  --ring: oklch(0.68 0.18 265);
-  --chart-1: oklch(0.68 0.2 265);
-  --chart-2: oklch(0.7 0.16 160);
-  --chart-3: oklch(0.75 0.16 60);
-  --chart-4: oklch(0.68 0.2 25);
-  --chart-5: oklch(0.68 0.18 320);
-  --chart-6: oklch(0.72 0.14 200);
+  --destructive-foreground: oklch(0.98 0.008 230);
+  --border: oklch(0.32 0.045 248);
+  --input: oklch(0.35 0.045 248);
+  --ring: oklch(0.68 0.15 235);
+  --chart-1: oklch(0.68 0.14 238);
+  --chart-2: oklch(0.75 0.13 205);
+  --chart-3: oklch(0.8 0.13 85);
+  --chart-4: oklch(0.68 0.18 25);
+  --chart-5: oklch(0.7 0.15 295);
+  --chart-6: oklch(0.74 0.13 160);
+  /* Ondas do fundo */
+  --wave: oklch(0.3 0.055 248);
+  --wave-opacity: 0.75;
 }
 
 @theme inline {
@@ -106,6 +114,39 @@
     -webkit-tap-highlight-color: transparent;
     overscroll-behavior-y: none;
   }
+
+  /*
+   * Fundo de ondas: listras onduladas atrás de todo o conteúdo.
+   * A onda é uma máscara, então a cor vem de --wave e acompanha o tema.
+   */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background-color: var(--wave);
+    opacity: var(--wave-opacity);
+    -webkit-mask-image: url("data:image/svg+xml,<svg%20xmlns='http://www.w3.org/2000/svg'%20width='120'%20height='40'%20viewBox='0%200%20120%2040'><path%20d='M0%2020c10-10%2020-10%2030%200s20%2010%2030%200%2020-10%2030%200%2020%2010%2030%200'%20fill='none'%20stroke='black'%20stroke-width='2'%20stroke-linecap='round'/></svg>");
+    mask-image: url("data:image/svg+xml,<svg%20xmlns='http://www.w3.org/2000/svg'%20width='120'%20height='40'%20viewBox='0%200%20120%2040'><path%20d='M0%2020c10-10%2020-10%2030%200s20%2010%2030%200%2020-10%2030%200%2020%2010%2030%200'%20fill='none'%20stroke='black'%20stroke-width='2'%20stroke-linecap='round'/></svg>");
+    -webkit-mask-size: 120px 40px;
+    mask-size: 120px 40px;
+    -webkit-mask-repeat: repeat;
+    mask-repeat: repeat;
+  }
+  /* Sem suporte a máscara, o fundo volta a ser liso em vez de virar um bloco de cor. */
+  @supports not ((mask-image: none) or (-webkit-mask-image: none)) {
+    body::before {
+      display: none;
+    }
+  }
+  /* Quem prefere menos estímulo visual vê o fundo liso. */
+  @media (prefers-reduced-motion: reduce) {
+    body::before {
+      opacity: calc(var(--wave-opacity) * 0.5);
+    }
+  }
+
   /* Evita o zoom automático do iOS ao focar um campo. */
   @media (max-width: 767px) {
     input,

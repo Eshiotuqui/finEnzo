@@ -12,7 +12,9 @@ import {
 } from "lucide-react"
 
 import { AccountDialog, SyncBadge } from "@/components/AccountDialog"
+import { WhaleMark } from "@/components/WhaleMark"
 import { CategoryManager } from "@/components/CategoryManager"
+import { ReloadButton } from "@/components/ReloadButton"
 import { ExpenseCharts } from "@/components/ExpenseCharts"
 import { TransactionForm } from "@/components/TransactionForm"
 import { TransactionList } from "@/components/TransactionList"
@@ -134,21 +136,24 @@ function HomeView({
       <header className="flex items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2">
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-            <Wallet className="h-5 w-5" />
+            <WhaleMark className="h-6 w-6" />
           </span>
           <div className="min-w-0">
-            <p className="text-sm font-semibold leading-none">finEnzo</p>
+            <p className="text-sm font-semibold leading-none tracking-tight">Whalio</p>
             <SyncBadge auth={auth} status={store.syncStatus} className="mt-1" />
           </div>
         </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onToggleTheme}
-          title={theme === "dark" ? "Tema claro" : "Tema escuro"}
-        >
-          {theme === "dark" ? <Sun /> : <Moon />}
-        </Button>
+        <div className="flex shrink-0 items-center">
+          <ReloadButton store={store} rates={rates} />
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onToggleTheme}
+            title={theme === "dark" ? "Tema claro" : "Tema escuro"}
+          >
+            {theme === "dark" ? <Sun /> : <Moon />}
+          </Button>
+        </div>
       </header>
 
       <section>
@@ -197,8 +202,8 @@ function HomeView({
 
         {recent.length === 0 ? (
           <div className="mt-3 rounded-xl border border-dashed p-8 text-center">
-            <ReceiptText className="mx-auto h-7 w-7 text-muted-foreground" />
-            <p className="mt-3 font-medium">Nada por aqui ainda</p>
+            <WhaleMark className="mx-auto h-9 w-9 text-muted-foreground" />
+            <p className="mt-3 font-medium">Mar calmo por aqui</p>
             <p className="mt-1 text-sm text-muted-foreground">
               Toque no <span className="font-semibold text-primary">+</span> da ilha
               para lançar seu primeiro gasto.
