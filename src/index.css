@@ -147,12 +147,5 @@
     }
   }
 
-  /* Evita o zoom automático do iOS ao focar um campo. */
-  @media (max-width: 767px) {
-    input,
-    select,
-    textarea {
-      font-size: 16px;
-    }
-  }
+
 }
