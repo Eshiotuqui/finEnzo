@@ -1,5 +1,6 @@
 import { Moon, Sun, Wallet } from "lucide-react"
 
+import { AccountDialog, SyncBadge } from "@/components/AccountDialog"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { SummaryCards } from "@/components/SummaryCards"
@@ -8,14 +9,31 @@ import { TransactionList } from "@/components/TransactionList"
 import { TransactionForm } from "@/components/TransactionForm"
 import { CategoryManager } from "@/components/CategoryManager"
 import { RatesBar } from "@/components/RatesBar"
+import { MobileApp } from "@/components/mobile/MobileApp"
+import { useAuth } from "@/hooks/useAuth"
 import { useFinance } from "@/hooks/useFinance"
+import { useIsMobile } from "@/hooks/useIsMobile"
 import { useRates } from "@/hooks/useRates"
 import { useTheme } from "@/hooks/useTheme"
 
 function App() {
-  const store = useFinance()
+  const auth = useAuth()
+  const store = useFinance(auth.userId)
   const rates = useRates()
   const { theme, toggle } = useTheme()
+  const isMobile = useIsMobile()
+
+  if (isMobile) {
+    return (
+      <MobileApp
+        store={store}
+        rates={rates}
+        auth={auth}
+        theme={theme}
+        onToggleTheme={toggle}
+      />
+    )
+  }
 
   return (
     <div className="min-h-screen">
@@ -27,14 +45,13 @@ function App() {
             </span>
             <div className="min-w-0">
               <h1 className="text-lg font-bold leading-none">finEnzo</h1>
-              <p className="hidden truncate text-xs text-muted-foreground sm:block">
-                Seu gerenciador financeiro
-              </p>
+              <SyncBadge auth={auth} status={store.syncStatus} className="mt-1" />
             </div>
           </div>
           <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
             <CategoryManager store={store} />
             <TransactionForm store={store} rates={rates} />
+            <AccountDialog auth={auth} store={store} />
             <Button variant="ghost" size="icon" onClick={toggle}>
               {theme === "dark" ? <Sun /> : <Moon />}
             </Button>
@@ -62,7 +79,9 @@ function App() {
       </main>
 
       <footer className="mx-auto max-w-6xl px-4 pb-8 pt-2 text-center text-xs text-muted-foreground">
-        Dados salvos localmente no seu navegador · finEnzo
+        {auth.userId
+          ? "Dados sincronizados na sua conta · finEnzo"
+          : "Dados salvos localmente no seu navegador · finEnzo"}
       </footer>
     </div>
   )

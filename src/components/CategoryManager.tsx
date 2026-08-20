@@ -49,7 +49,7 @@ export function CategoryManager({ store }: { store: FinanceStore }) {
           <Settings2 /> <span className="hidden sm:inline">Categorias</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-h-[85vh] overflow-y-auto">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>Categorias</DialogTitle>
           <DialogDescription>

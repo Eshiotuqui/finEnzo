@@ -35,12 +35,25 @@ function todayISO(): string {
 export function TransactionForm({
   store,
   rates,
+  open: openProp,
+  onOpenChange,
+  trigger,
 }: {
   store: FinanceStore
   rates: RatesStore
+  /** Controlado de fora (ilha do mobile abre o formulário pelo botão “+”). */
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
+  /** `null` esconde o gatilho — use junto com `open`. */
+  trigger?: React.ReactNode | null
 }) {
   const { categories, addTransaction } = store
-  const [open, setOpen] = useState(false)
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false)
+  const open = openProp ?? uncontrolledOpen
+  const setOpen = (value: boolean) => {
+    if (openProp === undefined) setUncontrolledOpen(value)
+    onOpenChange?.(value)
+  }
 
   const [type, setType] = useState<TransactionType>("expense")
   const [description, setDescription] = useState("")
@@ -88,11 +101,15 @@ export function TransactionForm({
         if (v) reset()
       }}
     >
-      <DialogTrigger asChild>
-        <Button>
-          <Plus /> <span className="hidden sm:inline">Novo lançamento</span>
-        </Button>
-      </DialogTrigger>
+      {trigger !== null && (
+        <DialogTrigger asChild>
+          {trigger ?? (
+            <Button>
+              <Plus /> <span className="hidden sm:inline">Novo lançamento</span>
+            </Button>
+          )}
+        </DialogTrigger>
+      )}
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Novo lançamento</DialogTitle>
