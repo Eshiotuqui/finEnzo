@@ -16,6 +16,8 @@ export function SummaryCards({
   rates: RatesStore
 }) {
   const totals = totalsByCurrency(transactions)
+  const display = rates.display
+  const displayInfo = CURRENCIES[display]
 
   if (totals.length === 0) {
     return (
@@ -31,26 +33,29 @@ export function SummaryCards({
     )
   }
 
-  // Consolidado: converte tudo para reais.
+  // Consolidado: converte tudo para a moeda de exibição escolhida.
   const consolidated = totals.reduce(
     (acc, t) => {
-      acc.income += rates.convertToBRL(t.income, t.currency)
-      acc.expense += rates.convertToBRL(t.expense, t.currency)
+      acc.income += rates.toDisplay(t.income, t.currency)
+      acc.expense += rates.toDisplay(t.expense, t.currency)
       return acc
     },
     { income: 0, expense: 0 }
   )
   const consolidatedBalance = consolidated.income - consolidated.expense
-  const hasForeign = totals.some((t) => t.currency !== "BRL")
+  // Só vale consolidar quando há mais de uma moeda ou a única difere da exibição.
+  const showConsolidated =
+    totals.length > 1 || totals[0]?.currency !== display
 
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {hasForeign && (
+      {showConsolidated && (
         <Card className="border-primary/40 bg-primary/5 sm:col-span-2 lg:col-span-1">
           <CardContent className="p-5">
             <div className="flex items-center justify-between">
               <span className="flex items-center gap-1.5 text-sm font-medium">
-                <Coins className="h-4 w-4 text-primary" /> Total geral em R$
+                <Coins className="h-4 w-4 text-primary" /> Total geral em{" "}
+                {displayInfo.symbol}
               </span>
               <span
                 className={cn(
@@ -60,7 +65,7 @@ export function SummaryCards({
                     : "text-destructive"
                 )}
               >
-                Saldo {formatMoney(consolidatedBalance, "BRL")}
+                Saldo {formatMoney(consolidatedBalance, display)}
               </span>
             </div>
             <div className="mt-4 space-y-2">
@@ -69,7 +74,7 @@ export function SummaryCards({
                   <TrendingUp className="h-4 w-4 text-emerald-500" /> Entradas
                 </span>
                 <span className="font-medium">
-                  {formatMoney(consolidated.income, "BRL")}
+                  {formatMoney(consolidated.income, display)}
                 </span>
               </div>
               <div className="flex items-center justify-between text-sm">
@@ -77,7 +82,7 @@ export function SummaryCards({
                   <TrendingDown className="h-4 w-4 text-destructive" /> Gastos
                 </span>
                 <span className="font-medium">
-                  {formatMoney(consolidated.expense, "BRL")}
+                  {formatMoney(consolidated.expense, display)}
                 </span>
               </div>
             </div>
@@ -90,7 +95,7 @@ export function SummaryCards({
 
       {totals.map((t) => {
         const info = CURRENCIES[t.currency]
-        const foreign = t.currency !== "BRL"
+        const needsConversion = t.currency !== display
         return (
           <Card key={t.currency}>
             <CardContent className="p-5">
@@ -129,9 +134,9 @@ export function SummaryCards({
                 </div>
               </div>
 
-              {foreign && (
+              {needsConversion && (
                 <p className="mt-3 text-xs text-muted-foreground tabular-nums">
-                  Gastos ≈ {formatMoney(rates.convertToBRL(t.expense, t.currency), "BRL")}
+                  Gastos ≈ {formatMoney(rates.toDisplay(t.expense, t.currency), display)}
                 </p>
               )}
             </CardContent>

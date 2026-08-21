@@ -15,6 +15,7 @@ interface RatesState {
 }
 
 const STORAGE_KEY = "finenzo:rates"
+const DISPLAY_KEY = "finenzo:display-currency"
 
 /** Cotações de fallback (usadas offline até a primeira atualização). */
 const DEFAULT_RATES: RatesToBRL = { BRL: 1, USD: 5.4, EUR: 5.9 }
@@ -57,8 +58,25 @@ async function fetchRates(): Promise<{ rates: RatesToBRL; change: RateChange }> 
   }
 }
 
+function loadDisplay(): CurrencyCode {
+  const saved = localStorage.getItem(DISPLAY_KEY)
+  return saved === "USD" || saved === "EUR" || saved === "BRL" ? saved : "BRL"
+}
+
 export function useRates() {
   const [state, setState] = useState<RatesState>(loadCached)
+
+  /** Moeda em que os totais consolidados são mostrados. */
+  const [display, setDisplayState] = useState<CurrencyCode>(loadDisplay)
+
+  const setDisplay = useCallback((currency: CurrencyCode) => {
+    setDisplayState(currency)
+    try {
+      localStorage.setItem(DISPLAY_KEY, currency)
+    } catch {
+      /* ignora */
+    }
+  }, [])
 
   const persist = useCallback((next: RatesState) => {
     setState(next)
@@ -109,7 +127,32 @@ export function useRates() {
     [state.ratesToBRL]
   )
 
-  return { ...state, refresh, setManualRate, convertToBRL }
+  /** Converte entre duas moedas quaisquer, passando pelo real. */
+  const convert = useCallback(
+    (amount: number, from: CurrencyCode, to: CurrencyCode) => {
+      if (from === to) return amount
+      const inBRL = amount * (state.ratesToBRL[from] ?? 1)
+      return inBRL / (state.ratesToBRL[to] ?? 1)
+    },
+    [state.ratesToBRL]
+  )
+
+  /** Converte para a moeda de exibição escolhida. */
+  const toDisplay = useCallback(
+    (amount: number, from: CurrencyCode) => convert(amount, from, display),
+    [convert, display]
+  )
+
+  return {
+    ...state,
+    refresh,
+    setManualRate,
+    convertToBRL,
+    convert,
+    display,
+    setDisplay,
+    toDisplay,
+  }
 }
 
 export type RatesStore = ReturnType<typeof useRates>

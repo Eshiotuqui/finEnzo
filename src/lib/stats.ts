@@ -1,4 +1,4 @@
-import type { CurrencyCode, Transaction } from "@/types"
+import type { CurrencyAmounts, CurrencyCode, Transaction } from "@/types"
 
 export interface CurrencyTotals {
   currency: CurrencyCode
@@ -74,4 +74,55 @@ function monthLabel(month: string): string {
     "jul", "ago", "set", "out", "nov", "dez",
   ]
   return `${names[Number(m) - 1]}/${year.slice(2)}`
+}
+
+export interface BudgetLine {
+  currency: CurrencyCode
+  budget: number
+  spent: number
+  remaining: number
+  /** Fração do orçamento já gasta (pode passar de 1). */
+  ratio: number
+}
+
+/**
+ * Compara o que foi separado com o que já foi gasto, moeda por moeda.
+ *
+ * Inclui também moedas em que houve gasto sem orçamento definido — esconder
+ * esse caso daria a impressão falsa de que ainda sobra dinheiro.
+ */
+export function budgetProgress(
+  transactions: Transaction[],
+  budget: CurrencyAmounts
+): BudgetLine[] {
+  const spentByCurrency = new Map<CurrencyCode, number>()
+  for (const t of transactions) {
+    if (t.type !== "expense") continue
+    spentByCurrency.set(t.currency, (spentByCurrency.get(t.currency) ?? 0) + t.amount)
+  }
+
+  const currencies = new Set<CurrencyCode>([
+    ...(Object.keys(budget) as CurrencyCode[]).filter((c) => (budget[c] ?? 0) > 0),
+    ...spentByCurrency.keys(),
+  ])
+
+  return [...currencies]
+    .map((currency) => {
+      const total = budget[currency] ?? 0
+      const spent = spentByCurrency.get(currency) ?? 0
+      return {
+        currency,
+        budget: total,
+        spent,
+        remaining: total - spent,
+        ratio: total > 0 ? spent / total : spent > 0 ? 1 : 0,
+      }
+    })
+    .sort((a, b) => b.budget - a.budget)
+}
+
+/** Um orçamento só "existe" se alguma moeda tiver valor positivo. */
+export function hasBudget(budget?: CurrencyAmounts): boolean {
+  if (!budget) return false
+  return Object.values(budget).some((v) => (v ?? 0) > 0)
 }

@@ -112,9 +112,9 @@ export function TransactionList({
                       {isExpense ? "-" : "+"}
                       {formatMoney(t.amount, t.currency)}
                     </span>
-                    {t.currency !== "BRL" && (
+                    {t.currency !== rates.display && (
                       <p className="text-xs text-muted-foreground tabular-nums">
-                        ≈ {formatMoney(rates.convertToBRL(t.amount, t.currency), "BRL")}
+                        ≈ {formatMoney(rates.toDisplay(t.amount, t.currency), rates.display)}
                       </p>
                     )}
                   </div>

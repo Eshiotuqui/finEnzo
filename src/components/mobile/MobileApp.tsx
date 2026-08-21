@@ -15,6 +15,8 @@ import { AccountDialog, SyncBadge } from "@/components/AccountDialog"
 import { WhaleMark } from "@/components/WhaleMark"
 import { CategoryManager } from "@/components/CategoryManager"
 import { CollectionChips } from "@/components/CollectionSwitcher"
+import { BudgetCard } from "@/components/BudgetCard"
+import { CurrencySwitcher } from "@/components/CurrencySwitcher"
 import { ReloadButton } from "@/components/ReloadButton"
 import { ExpenseCharts } from "@/components/ExpenseCharts"
 import { TransactionForm } from "@/components/TransactionForm"
@@ -162,8 +164,8 @@ function HomeView({
   const totals = totalsByCurrency(scoped.transactions)
   const consolidated = totals.reduce(
     (acc, t) => {
-      acc.income += rates.convertToBRL(t.income, t.currency)
-      acc.expense += rates.convertToBRL(t.expense, t.currency)
+      acc.income += rates.toDisplay(t.income, t.currency)
+      acc.expense += rates.toDisplay(t.expense, t.currency)
       return acc
     },
     { income: 0, expense: 0 }
@@ -202,15 +204,24 @@ function HomeView({
         onSelect={onSelectCollection}
       />
 
+      <BudgetCard
+        store={scoped}
+        rates={rates}
+        selectedCollection={selectedCollection}
+      />
+
       <section>
-        <p className="text-sm text-muted-foreground">Saldo total</p>
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-sm text-muted-foreground">Saldo total</p>
+          <CurrencySwitcher rates={rates} />
+        </div>
         <p
           className={cn(
             "mt-1 text-4xl font-bold leading-none tabular-nums",
             balance < 0 && "text-destructive"
           )}
         >
-          {formatMoney(balance, "BRL")}
+          {formatMoney(balance, rates.display)}
         </p>
         <p className="mt-2 text-xs text-muted-foreground">
           Todas as moedas convertidas pela cotação atual
@@ -219,12 +230,12 @@ function HomeView({
         <div className="mt-5 grid grid-cols-2 gap-3">
           <TotalPill
             label="Entradas"
-            value={formatMoney(consolidated.income, "BRL")}
+            value={formatMoney(consolidated.income, rates.display)}
             tone="income"
           />
           <TotalPill
             label="Gastos"
-            value={formatMoney(consolidated.expense, "BRL")}
+            value={formatMoney(consolidated.expense, rates.display)}
             tone="expense"
           />
         </div>

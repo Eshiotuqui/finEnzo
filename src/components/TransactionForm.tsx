@@ -230,7 +230,7 @@ export function TransactionForm({
             </div>
           </div>
 
-          {currency !== "BRL" &&
+          {currency !== rates.display &&
             (() => {
               const value = Number(amount.replace(",", "."))
               if (!Number.isFinite(value) || value <= 0) return null
@@ -238,7 +238,7 @@ export function TransactionForm({
                 <p className="-mt-1 text-sm text-muted-foreground">
                   ≈{" "}
                   <span className="font-medium text-foreground">
-                    {formatMoney(rates.convertToBRL(value, currency), "BRL")}
+                    {formatMoney(rates.toDisplay(value, currency), rates.display)}
                   </span>{" "}
                   na cotação atual
                 </p>

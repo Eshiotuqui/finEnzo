@@ -17,6 +17,8 @@ create table if not exists public.collections (
   id      text not null,
   name    text not null,
   icon    text not null default '🙋',
+  -- Quanto foi separado para gastar, por moeda: {"BRL": 2000, "USD": 500}
+  budget  jsonb,
   updated_at timestamptz not null default now(),
   primary key (user_id, id)
 );
@@ -38,6 +40,10 @@ create table if not exists public.transactions (
 
 create index if not exists transactions_user_date_idx
   on public.transactions (user_id, date desc);
+
+-- Bancos criados antes do orçamento por coleção.
+alter table public.collections
+  add column if not exists budget jsonb;
 
 -- Bancos criados antes das coleções: adiciona a coluna e adota tudo que existe.
 alter table public.transactions

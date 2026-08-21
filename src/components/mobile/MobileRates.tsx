@@ -2,17 +2,18 @@ import { Pencil, RefreshCw, TrendingDown, TrendingUp } from "lucide-react"
 
 import { EditRatesDialog } from "@/components/EditRatesDialog"
 import { Button } from "@/components/ui/button"
-import { CURRENCIES, formatMoney } from "@/lib/currency"
+import { CURRENCIES, CURRENCY_LIST, formatMoney } from "@/lib/currency"
 import { cn } from "@/lib/utils"
 import type { CurrencyCode } from "@/types"
 import type { RatesStore } from "@/hooks/useRates"
 
-const FOREIGN: CurrencyCode[] = ["USD", "EUR"]
-
 /** Cotações do dia em formato compacto, pensado para tela de celular. */
 export function MobileRates({ rates }: { rates: RatesStore }) {
-  const { ratesToBRL, change, source, refresh } = rates
+  const { change, source, refresh, display } = rates
   const loading = source === "loading"
+  const others = CURRENCY_LIST.map((c) => c.code as CurrencyCode).filter(
+    (c) => c !== display
+  )
 
   return (
     <section>
@@ -46,9 +47,10 @@ export function MobileRates({ rates }: { rates: RatesStore }) {
       </div>
 
       <div className="mt-3 grid grid-cols-2 gap-3">
-        {FOREIGN.map((code) => {
+        {others.map((code) => {
           const info = CURRENCIES[code]
-          const pct = change[code]
+          // A variação do dia é medida contra o real.
+          const pct = display === "BRL" ? change[code] : undefined
           const up = (pct ?? 0) >= 0
           const Arrow = up ? TrendingUp : TrendingDown
           return (
@@ -57,7 +59,7 @@ export function MobileRates({ rates }: { rates: RatesStore }) {
                 {info.flag} 1 {info.symbol}
               </span>
               <p className="mt-1 text-lg font-semibold tabular-nums">
-                {formatMoney(ratesToBRL[code], "BRL")}
+                {formatMoney(rates.convert(1, code, display), display)}
               </p>
               {pct !== undefined && (
                 <span

@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { Check, FolderOpen, Pencil, Plus, Trash2, X } from "lucide-react"
+import { Check, FolderOpen, Pencil, PiggyBank, Plus, Trash2, X } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -12,7 +12,11 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { BudgetDialog } from "@/components/BudgetDialog"
+import { formatMoney } from "@/lib/currency"
+import { hasBudget } from "@/lib/stats"
 import { cn } from "@/lib/utils"
+import type { CurrencyCode } from "@/types"
 import type { FinanceStore } from "@/hooks/useFinance"
 
 const EMOJI_OPTIONS = [
@@ -152,10 +156,33 @@ export function CollectionManager({
                   <>
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-medium">{c.name}</p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="truncate text-xs text-muted-foreground">
                         {count} lançamento{count === 1 ? "" : "s"}
+                        {hasBudget(c.budget) &&
+                          ` · orçamento ${Object.entries(c.budget ?? {})
+                            .map(([code, value]) =>
+                              formatMoney(value ?? 0, code as CurrencyCode)
+                            )
+                            .join(" + ")}`}
                       </p>
                     </div>
+                    <BudgetDialog
+                      store={store}
+                      collection={c}
+                      trigger={
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className={cn(
+                            "text-muted-foreground hover:text-foreground",
+                            hasBudget(c.budget) && "text-primary"
+                          )}
+                          aria-label={`Orçamento de ${c.name}`}
+                        >
+                          <PiggyBank />
+                        </Button>
+                      }
+                    />
                     <Button
                       variant="ghost"
                       size="icon"

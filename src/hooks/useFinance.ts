@@ -4,6 +4,7 @@ import { supabase } from "@/lib/supabase"
 import type {
   Category,
   Collection,
+  CurrencyAmounts,
   CurrencyCode,
   Transaction,
   TransactionType,
@@ -96,6 +97,7 @@ interface CollectionRow {
   user_id: string
   name: string
   icon: string
+  budget: CurrencyAmounts | null
 }
 
 interface TransactionRow {
@@ -116,7 +118,12 @@ function toCategory(row: CategoryRow): Category {
 }
 
 function toCollection(row: CollectionRow): Collection {
-  return { id: row.id, name: row.name, icon: row.icon }
+  return {
+    id: row.id,
+    name: row.name,
+    icon: row.icon,
+    ...(row.budget ? { budget: row.budget } : {}),
+  }
 }
 
 function toTransaction(row: TransactionRow): Transaction {
@@ -138,7 +145,13 @@ function categoryRow(c: Category, userId: string) {
 }
 
 function collectionRow(c: Collection, userId: string) {
-  return { id: c.id, user_id: userId, name: c.name, icon: c.icon }
+  return {
+    id: c.id,
+    user_id: userId,
+    name: c.name,
+    icon: c.icon,
+    budget: c.budget ?? null,
+  }
 }
 
 function transactionRow(t: Transaction, userId: string) {
@@ -496,6 +509,25 @@ export function useFinance(userId: string | null) {
     [push]
   )
 
+  /** Define (ou limpa, passando `undefined`) o orçamento de uma coleção. */
+  const setBudget = useCallback(
+    (id: string, budget: CurrencyAmounts | undefined) => {
+      const current = dataRef.current.collections.find((c) => c.id === id)
+      if (!current) return
+      const updated: Collection = { ...current }
+      if (budget && Object.keys(budget).length) updated.budget = budget
+      else delete updated.budget
+      setData((prev) => ({
+        ...prev,
+        collections: prev.collections.map((c) => (c.id === id ? updated : c)),
+      }))
+      void push((client, uid) =>
+        client.from("collections").upsert(collectionRow(updated, uid))
+      )
+    },
+    [push]
+  )
+
   /**
    * Exclui a coleção junto com os lançamentos dela — é o que a pessoa espera
    * ao apagar "Gastos do sogro". A UI mostra a contagem antes de confirmar.
@@ -593,6 +625,7 @@ export function useFinance(userId: string | null) {
     deleteCategory,
     addCollection,
     updateCollection,
+    setBudget,
     deleteCollection,
     addTransaction,
     updateTransaction,

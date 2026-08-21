@@ -1,13 +1,12 @@
 import { RefreshCw, TrendingDown, TrendingUp } from "lucide-react"
 
 import { EditRatesDialog } from "@/components/EditRatesDialog"
+import { CurrencySwitcher } from "@/components/CurrencySwitcher"
 import { Button } from "@/components/ui/button"
-import { CURRENCIES, formatMoney } from "@/lib/currency"
+import { CURRENCIES, CURRENCY_LIST, formatMoney } from "@/lib/currency"
 import { cn } from "@/lib/utils"
 import type { CurrencyCode } from "@/types"
 import type { RatesStore } from "@/hooks/useRates"
-
-const FOREIGN: CurrencyCode[] = ["USD", "EUR"]
 
 function timeAgo(ts: number | null): string {
   if (!ts) return "—"
@@ -22,8 +21,12 @@ function timeAgo(ts: number | null): string {
 }
 
 export function RatesBar({ rates }: { rates: RatesStore }) {
-  const { ratesToBRL, change, source, updatedAt, refresh } = rates
+  const { change, source, updatedAt, refresh, display } = rates
   const loading = source === "loading"
+  // Mostra quanto vale 1 unidade das outras moedas na moeda de exibição.
+  const others = CURRENCY_LIST.map((c) => c.code as CurrencyCode).filter(
+    (c) => c !== display
+  )
 
   const sourceLabel =
     source === "live"
@@ -39,8 +42,9 @@ export function RatesBar({ rates }: { rates: RatesStore }) {
   return (
     <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border bg-card px-3 py-2 text-sm">
       <div className="flex flex-wrap items-center gap-2">
-        {FOREIGN.map((c) => {
-          const pct = change[c]
+        {others.map((c) => {
+          // A variação do dia é medida contra o real; só faz sentido ali.
+          const pct = display === "BRL" ? change[c] : undefined
           const up = (pct ?? 0) >= 0
           const Arrow = up ? TrendingUp : TrendingDown
           return (
@@ -50,7 +54,7 @@ export function RatesBar({ rates }: { rates: RatesStore }) {
             >
               <span>
                 {CURRENCIES[c].flag} 1 {CURRENCIES[c].symbol} ={" "}
-                {formatMoney(ratesToBRL[c], "BRL")}
+                {formatMoney(rates.convert(1, c, display), display)}
               </span>
               {pct !== undefined && (
                 <span
@@ -81,7 +85,8 @@ export function RatesBar({ rates }: { rates: RatesStore }) {
         {sourceLabel}
       </span>
 
-      <div className="ml-auto flex items-center gap-1">
+      <div className="ml-auto flex items-center gap-2">
+        <CurrencySwitcher rates={rates} />
         <Button
           variant="ghost"
           size="icon"

@@ -7,10 +7,14 @@ Gerenciador financeiro pessoal — cadastre seus gastos e entradas, escolha a mo
 
 - **Coleções**: separe os lançamentos por grupo (“Meus gastos”, “Gastos do sogro”)
   e filtre saldo, gráficos e lista pela coleção em foco
+- **Orçamento por coleção**: diga quanto levou para a viagem (em cada moeda) e
+  acompanhe quanto ainda pode gastar, com alerta ao estourar
 - **Lançamentos** de gastos e entradas, cada um com sua **moeda** (🇧🇷 BRL, 🇺🇸 USD, 🇪🇺 EUR)
 - **Categorias** personalizáveis com emoji (ex: ✈️ Viagem, 🍔 Alimentação)
 - **Totais por moeda** (cada moeda é somada de forma independente, sem conversão)
 - **Gráficos**: gastos por categoria (pizza) e entradas × gastos por mês (barras)
+- **Moeda de exibição**: leia os totais consolidados em real, dólar ou euro — a
+  escolha vale para saldo, orçamento, equivalências e cotações
 - **Cotação real** de dólar e euro (AwesomeAPI), com variação do dia, atualização
   manual e opção de definir a cotação na mão
 - **Conta com e-mail e senha**: os mesmos lançamentos no PC e no celular, com
@@ -66,6 +70,9 @@ src/
 │   ├── CategoryManager.tsx  # criar/excluir categorias
 │   ├── CollectionManager.tsx # criar/renomear/excluir coleções
 │   ├── CollectionSwitcher.tsx # seletor (desktop) e chips (mobile) de coleção
+│   ├── BudgetCard.tsx       # quanto ainda pode ser gasto
+│   ├── BudgetDialog.tsx     # define o orçamento por moeda
+│   ├── CurrencySwitcher.tsx # escolhe a moeda de exibição
 │   ├── SummaryCards.tsx     # cards de saldo/entradas/gastos por moeda
 │   ├── ExpenseCharts.tsx    # gráficos (pizza + barras)
 │   └── TransactionList.tsx  # lista de lançamentos com filtro

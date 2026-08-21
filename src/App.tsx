@@ -13,6 +13,7 @@ import { TransactionForm } from "@/components/TransactionForm"
 import { CategoryManager } from "@/components/CategoryManager"
 import { RatesBar } from "@/components/RatesBar"
 import { CollectionSwitcher } from "@/components/CollectionSwitcher"
+import { BudgetCard } from "@/components/BudgetCard"
 import { MobileApp } from "@/components/mobile/MobileApp"
 import { useAuth } from "@/hooks/useAuth"
 import { ALL_COLLECTIONS, useCollectionFilter } from "@/hooks/useCollectionFilter"
@@ -92,6 +93,8 @@ function App() {
         <RatesBar rates={rates} />
 
         <CollectionSwitcher store={store} selected={selected} onSelect={select} />
+
+        <BudgetCard store={scoped} rates={rates} selectedCollection={selected} />
 
         <SummaryCards transactions={scoped.transactions} rates={rates} />
 
