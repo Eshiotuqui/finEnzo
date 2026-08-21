@@ -2,6 +2,17 @@ export type CurrencyCode = "BRL" | "USD" | "EUR"
 
 export type TransactionType = "expense" | "income"
 
+/**
+ * Agrupador de mais alto nível: separa lançamentos por "de quem é o gasto"
+ * (ex.: "Meus gastos", "Gastos do sogro"), sem misturar os totais.
+ */
+export interface Collection {
+  id: string
+  name: string
+  /** Emoji usado como ícone da coleção */
+  icon: string
+}
+
 export interface Category {
   id: string
   name: string
@@ -19,6 +30,7 @@ export interface Transaction {
   currency: CurrencyCode
   type: TransactionType
   categoryId: string
+  collectionId: string
   /** Data no formato ISO (YYYY-MM-DD) */
   date: string
   createdAt: number

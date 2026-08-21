@@ -1,7 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import { supabase } from "@/lib/supabase"
-import type { Category, CurrencyCode, Transaction, TransactionType } from "@/types"
+import type {
+  Category,
+  Collection,
+  CurrencyCode,
+  Transaction,
+  TransactionType,
+} from "@/types"
 
 const DEFAULT_CATEGORIES: Category[] = [
   { id: "cat-viagem", name: "Viagem", icon: "✈️", color: 1 },
@@ -12,6 +18,13 @@ const DEFAULT_CATEGORIES: Category[] = [
   { id: "cat-salario", name: "Salário", icon: "💰", color: 6 },
 ]
 
+/** Coleção que recebe tudo que existia antes de o recurso existir. */
+export const DEFAULT_COLLECTION_ID = "col-proprio"
+
+const DEFAULT_COLLECTIONS: Collection[] = [
+  { id: DEFAULT_COLLECTION_ID, name: "Meus gastos", icon: "🙋" },
+]
+
 /** Estado da sincronização com a nuvem (só relevante com conta ativa). */
 export type SyncStatus = "off" | "syncing" | "synced" | "error"
 
@@ -20,16 +33,8 @@ const LOCAL_SCOPE = "local"
 
 // As chaves mantêm o prefixo "finenzo:" de propósito: renomear para "whalio:"
 // faria quem já usava o app perder os lançamentos guardados no navegador.
-
-function categoriesKey(scope: string) {
-  return scope === LOCAL_SCOPE
-    ? "finenzo:categories"
-    : `finenzo:categories:${scope}`
-}
-function transactionsKey(scope: string) {
-  return scope === LOCAL_SCOPE
-    ? "finenzo:transactions"
-    : `finenzo:transactions:${scope}`
+function scopedKey(name: string, scope: string) {
+  return scope === LOCAL_SCOPE ? `finenzo:${name}` : `finenzo:${name}:${scope}`
 }
 function migratedKey(userId: string) {
   return `finenzo:migrated:${userId}`
@@ -54,14 +59,25 @@ function load<T>(key: string, fallback: T): T {
 interface ScopedData {
   scope: string
   categories: Category[]
+  collections: Collection[]
   transactions: Transaction[]
+}
+
+/** Lançamentos antigos não tinham coleção: entram na coleção padrão. */
+function withCollection(transactions: Transaction[]): Transaction[] {
+  return transactions.map((t) =>
+    t.collectionId ? t : { ...t, collectionId: DEFAULT_COLLECTION_ID }
+  )
 }
 
 function loadScope(scope: string): ScopedData {
   return {
     scope,
-    categories: load(categoriesKey(scope), DEFAULT_CATEGORIES),
-    transactions: load(transactionsKey(scope), [] as Transaction[]),
+    categories: load(scopedKey("categories", scope), DEFAULT_CATEGORIES),
+    collections: load(scopedKey("collections", scope), DEFAULT_COLLECTIONS),
+    transactions: withCollection(
+      load(scopedKey("transactions", scope), [] as Transaction[])
+    ),
   }
 }
 
@@ -75,6 +91,13 @@ interface CategoryRow {
   color: number
 }
 
+interface CollectionRow {
+  id: string
+  user_id: string
+  name: string
+  icon: string
+}
+
 interface TransactionRow {
   id: string
   user_id: string
@@ -83,12 +106,17 @@ interface TransactionRow {
   currency: string
   type: string
   category_id: string
+  collection_id: string | null
   date: string
   created_at: number | string
 }
 
 function toCategory(row: CategoryRow): Category {
   return { id: row.id, name: row.name, icon: row.icon, color: Number(row.color) }
+}
+
+function toCollection(row: CollectionRow): Collection {
+  return { id: row.id, name: row.name, icon: row.icon }
 }
 
 function toTransaction(row: TransactionRow): Transaction {
@@ -99,6 +127,7 @@ function toTransaction(row: TransactionRow): Transaction {
     currency: row.currency as CurrencyCode,
     type: row.type as TransactionType,
     categoryId: row.category_id,
+    collectionId: row.collection_id ?? DEFAULT_COLLECTION_ID,
     date: row.date,
     createdAt: Number(row.created_at),
   }
@@ -106,6 +135,10 @@ function toTransaction(row: TransactionRow): Transaction {
 
 function categoryRow(c: Category, userId: string) {
   return { id: c.id, user_id: userId, name: c.name, icon: c.icon, color: c.color }
+}
+
+function collectionRow(c: Collection, userId: string) {
+  return { id: c.id, user_id: userId, name: c.name, icon: c.icon }
 }
 
 function transactionRow(t: Transaction, userId: string) {
@@ -117,6 +150,7 @@ function transactionRow(t: Transaction, userId: string) {
     currency: t.currency,
     type: t.type,
     category_id: t.categoryId,
+    collection_id: t.collectionId,
     date: t.date,
     created_at: t.createdAt,
   }
@@ -145,7 +179,7 @@ export function useFinance(userId: string | null) {
   dataRef.current = data
 
   const hydrated = data.scope === scope
-  const { categories, transactions } = data
+  const { categories, collections, transactions } = data
 
   // Troca de escopo (login/logout): recarrega o cache daquele escopo.
   useEffect(() => {
@@ -156,12 +190,16 @@ export function useFinance(userId: string | null) {
   useEffect(() => {
     if (!hydrated) return
     try {
-      localStorage.setItem(categoriesKey(scope), JSON.stringify(categories))
-      localStorage.setItem(transactionsKey(scope), JSON.stringify(transactions))
+      localStorage.setItem(scopedKey("categories", scope), JSON.stringify(categories))
+      localStorage.setItem(scopedKey("collections", scope), JSON.stringify(collections))
+      localStorage.setItem(
+        scopedKey("transactions", scope),
+        JSON.stringify(transactions)
+      )
     } catch {
       /* quota cheia: seguimos só com o estado em memória */
     }
-  }, [hydrated, scope, categories, transactions])
+  }, [hydrated, scope, categories, collections, transactions])
 
   /* ----------------------------- nuvem ----------------------------- */
 
@@ -169,14 +207,17 @@ export function useFinance(userId: string | null) {
     if (!supabase) return
     setSyncStatus("syncing")
     try {
-      const [cats, txs] = await Promise.all([
+      const [cats, cols, txs] = await Promise.all([
         supabase.from("categories").select("*").eq("user_id", uid),
+        supabase.from("collections").select("*").eq("user_id", uid),
         supabase.from("transactions").select("*").eq("user_id", uid),
       ])
       if (cats.error) throw cats.error
+      if (cols.error) throw cols.error
       if (txs.error) throw txs.error
 
       let remoteCategories = (cats.data as CategoryRow[]).map(toCategory)
+      let remoteCollections = (cols.data as CollectionRow[]).map(toCollection)
       let remoteTransactions = (txs.data as TransactionRow[]).map(toTransaction)
 
       // Primeiro login neste dispositivo: sobe o que foi cadastrado offline.
@@ -184,10 +225,14 @@ export function useFinance(userId: string | null) {
       if (!alreadyMigrated) {
         const local = loadScope(LOCAL_SCOPE)
         const remoteCatIds = new Set(remoteCategories.map((c) => c.id))
+        const remoteColIds = new Set(remoteCollections.map((c) => c.id))
         const remoteTxIds = new Set(remoteTransactions.map((t) => t.id))
         const newCats = remoteCategories.length
           ? local.categories.filter((c) => !remoteCatIds.has(c.id))
           : local.categories
+        const newCols = remoteCollections.length
+          ? local.collections.filter((c) => !remoteColIds.has(c.id))
+          : local.collections
         const newTxs = local.transactions.filter((t) => !remoteTxIds.has(t.id))
 
         if (newCats.length) {
@@ -196,6 +241,13 @@ export function useFinance(userId: string | null) {
             .upsert(newCats.map((c) => categoryRow(c, uid)))
           if (error) throw error
           remoteCategories = [...remoteCategories, ...newCats]
+        }
+        if (newCols.length) {
+          const { error } = await supabase
+            .from("collections")
+            .upsert(newCols.map((c) => collectionRow(c, uid)))
+          if (error) throw error
+          remoteCollections = [...remoteCollections, ...newCols]
         }
         if (newTxs.length) {
           const { error } = await supabase
@@ -207,7 +259,7 @@ export function useFinance(userId: string | null) {
         localStorage.setItem(migratedKey(uid), "1")
       }
 
-      // Conta nova e vazia: começa com as categorias padrão.
+      // Conta nova e vazia: começa com os padrões.
       if (remoteCategories.length === 0) {
         const { error } = await supabase
           .from("categories")
@@ -215,10 +267,18 @@ export function useFinance(userId: string | null) {
         if (error) throw error
         remoteCategories = DEFAULT_CATEGORIES
       }
+      if (remoteCollections.length === 0) {
+        const { error } = await supabase
+          .from("collections")
+          .upsert(DEFAULT_COLLECTIONS.map((c) => collectionRow(c, uid)))
+        if (error) throw error
+        remoteCollections = DEFAULT_COLLECTIONS
+      }
 
       setData({
         scope: uid,
         categories: remoteCategories,
+        collections: remoteCollections,
         transactions: remoteTransactions.sort(byDateDesc),
       })
       setSyncStatus("synced")
@@ -235,16 +295,13 @@ export function useFinance(userId: string | null) {
     }
     void pull(userId)
 
+    const scoped = { schema: "public", filter: `user_id=eq.${userId}` } as const
+
     const channel = supabase
       .channel(`finenzo:${userId}`)
       .on(
         "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "categories",
-          filter: `user_id=eq.${userId}`,
-        },
+        { event: "*", table: "categories", ...scoped },
         (payload) => {
           setData((prev) => {
             if (prev.scope !== userId) return prev
@@ -268,12 +325,31 @@ export function useFinance(userId: string | null) {
       )
       .on(
         "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "transactions",
-          filter: `user_id=eq.${userId}`,
-        },
+        { event: "*", table: "collections", ...scoped },
+        (payload) => {
+          setData((prev) => {
+            if (prev.scope !== userId) return prev
+            if (payload.eventType === "DELETE") {
+              const id = (payload.old as { id?: string }).id
+              return {
+                ...prev,
+                collections: prev.collections.filter((c) => c.id !== id),
+              }
+            }
+            const col = toCollection(payload.new as CollectionRow)
+            const exists = prev.collections.some((c) => c.id === col.id)
+            return {
+              ...prev,
+              collections: exists
+                ? prev.collections.map((c) => (c.id === col.id ? col : c))
+                : [...prev.collections, col],
+            }
+          })
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", table: "transactions", ...scoped },
         (payload) => {
           setData((prev) => {
             if (prev.scope !== userId) return prev
@@ -337,7 +413,7 @@ export function useFinance(userId: string | null) {
     if (uid) await pull(uid)
   }, [pull])
 
-  /* ---------------------------- mutações ---------------------------- */
+  /* --------------------------- categorias --------------------------- */
 
   const addCategory = useCallback(
     (input: Omit<Category, "id">) => {
@@ -386,6 +462,65 @@ export function useFinance(userId: string | null) {
     },
     [push]
   )
+
+  /* --------------------------- coleções ----------------------------- */
+
+  const addCollection = useCallback(
+    (input: Omit<Collection, "id">) => {
+      const collection: Collection = { ...input, id: makeId("col") }
+      setData((prev) => ({
+        ...prev,
+        collections: [...prev.collections, collection],
+      }))
+      void push((client, uid) =>
+        client.from("collections").upsert(collectionRow(collection, uid))
+      )
+      return collection
+    },
+    [push]
+  )
+
+  const updateCollection = useCallback(
+    (id: string, patch: Partial<Collection>) => {
+      const current = dataRef.current.collections.find((c) => c.id === id)
+      if (!current) return
+      const updated: Collection = { ...current, ...patch }
+      setData((prev) => ({
+        ...prev,
+        collections: prev.collections.map((c) => (c.id === id ? updated : c)),
+      }))
+      void push((client, uid) =>
+        client.from("collections").upsert(collectionRow(updated, uid))
+      )
+    },
+    [push]
+  )
+
+  /**
+   * Exclui a coleção junto com os lançamentos dela — é o que a pessoa espera
+   * ao apagar "Gastos do sogro". A UI mostra a contagem antes de confirmar.
+   */
+  const deleteCollection = useCallback(
+    (id: string) => {
+      setData((prev) => ({
+        ...prev,
+        collections: prev.collections.filter((c) => c.id !== id),
+        transactions: prev.transactions.filter((t) => t.collectionId !== id),
+      }))
+      void push(async (client, uid) => {
+        const txs = await client
+          .from("transactions")
+          .delete()
+          .eq("user_id", uid)
+          .eq("collection_id", id)
+        if (txs.error) return txs
+        return client.from("collections").delete().eq("user_id", uid).eq("id", id)
+      })
+    },
+    [push]
+  )
+
+  /* -------------------------- lançamentos --------------------------- */
 
   const addTransaction = useCallback(
     (input: Omit<Transaction, "id" | "createdAt">) => {
@@ -439,15 +574,26 @@ export function useFinance(userId: string | null) {
     return map
   }, [categories])
 
+  const collectionsById = useMemo(() => {
+    const map = new Map<string, Collection>()
+    collections.forEach((c) => map.set(c.id, c))
+    return map
+  }, [collections])
+
   return {
     categories,
+    collections,
     transactions,
     categoriesById,
+    collectionsById,
     syncStatus,
     refresh,
     addCategory,
     updateCategory,
     deleteCategory,
+    addCollection,
+    updateCollection,
+    deleteCollection,
     addTransaction,
     updateTransaction,
     deleteTransaction,

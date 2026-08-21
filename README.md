@@ -5,6 +5,8 @@ Gerenciador financeiro pessoal — cadastre seus gastos e entradas, escolha a mo
 
 ## Funcionalidades
 
+- **Coleções**: separe os lançamentos por grupo (“Meus gastos”, “Gastos do sogro”)
+  e filtre saldo, gráficos e lista pela coleção em foco
 - **Lançamentos** de gastos e entradas, cada um com sua **moeda** (🇧🇷 BRL, 🇺🇸 USD, 🇪🇺 EUR)
 - **Categorias** personalizáveis com emoji (ex: ✈️ Viagem, 🍔 Alimentação)
 - **Totais por moeda** (cada moeda é somada de forma independente, sem conversão)
@@ -37,8 +39,9 @@ Para ter conta e sincronização:
 
 1. Crie um projeto no [Supabase](https://supabase.com).
 2. No **SQL Editor**, rode o conteúdo de [`supabase/schema.sql`](supabase/schema.sql)
-   — ele cria as tabelas `categories` e `transactions`, ativa RLS (cada usuário só
-   acessa as próprias linhas) e habilita o realtime.
+   — ele cria as tabelas `categories`, `collections` e `transactions`, ativa RLS
+   (cada usuário só acessa as próprias linhas) e habilita o realtime. O arquivo é
+   idempotente: rodar de novo depois de atualizar o app aplica as migrações.
 3. Copie `.env.example` para `.env.local` e preencha com os dados de
    **Project Settings → API**:
 
@@ -61,6 +64,8 @@ src/
 │   ├── ui/                  # primitivos shadcn (button, card, dialog, select…)
 │   ├── TransactionForm.tsx  # formulário de novo lançamento
 │   ├── CategoryManager.tsx  # criar/excluir categorias
+│   ├── CollectionManager.tsx # criar/renomear/excluir coleções
+│   ├── CollectionSwitcher.tsx # seletor (desktop) e chips (mobile) de coleção
 │   ├── SummaryCards.tsx     # cards de saldo/entradas/gastos por moeda
 │   ├── ExpenseCharts.tsx    # gráficos (pizza + barras)
 │   └── TransactionList.tsx  # lista de lançamentos com filtro
@@ -71,6 +76,7 @@ src/
 │   ├── useFinance.ts        # estado central: localStorage + Supabase (realtime)
 │   ├── useAuth.ts           # conta (Supabase Auth)
 │   ├── useRates.ts          # cotação USD/EUR ao vivo + fallback offline
+│   ├── useCollectionFilter.ts # coleção em foco (persistida)
 │   ├── useIsMobile.ts       # escolhe o layout desktop x mobile
 │   └── useTheme.ts          # dark/light mode
 ├── lib/                     # moedas, cores, estatísticas, utils

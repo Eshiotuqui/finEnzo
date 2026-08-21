@@ -39,6 +39,7 @@ export function TransactionForm({
   onOpenChange,
   trigger,
   transaction,
+  defaultCollectionId,
 }: {
   store: FinanceStore
   rates: RatesStore
@@ -52,8 +53,12 @@ export function TransactionForm({
    * usa este modo deve remontar o componente (`key={transaction.id}`).
    */
   transaction?: Transaction | null
+  /** Coleção pré-selecionada em novos lançamentos (a que está em foco na tela). */
+  defaultCollectionId?: string
 }) {
-  const { categories, addTransaction, updateTransaction } = store
+  const { categories, collections, addTransaction, updateTransaction } = store
+  const initialCollectionId =
+    transaction?.collectionId ?? defaultCollectionId ?? collections[0]?.id ?? ""
   const editing = Boolean(transaction)
   const [uncontrolledOpen, setUncontrolledOpen] = useState(false)
   const open = openProp ?? uncontrolledOpen
@@ -75,6 +80,7 @@ export function TransactionForm({
   const [categoryId, setCategoryId] = useState(
     transaction?.categoryId ?? categories[0]?.id ?? ""
   )
+  const [collectionId, setCollectionId] = useState(initialCollectionId)
   const [date, setDate] = useState(transaction?.date ?? todayISO())
   const [error, setError] = useState("")
 
@@ -85,6 +91,7 @@ export function TransactionForm({
     setAmount("")
     setCurrency("BRL")
     setCategoryId(categories[0]?.id ?? "")
+    setCollectionId(initialCollectionId)
     setDate(todayISO())
     setError("")
   }
@@ -96,6 +103,7 @@ export function TransactionForm({
     if (!Number.isFinite(value) || value <= 0)
       return setError("Informe um valor maior que zero.")
     if (!categoryId) return setError("Selecione uma categoria.")
+    if (!collectionId) return setError("Selecione uma coleção.")
 
     const payload = {
       description: description.trim(),
@@ -103,6 +111,7 @@ export function TransactionForm({
       currency,
       type,
       categoryId,
+      collectionId,
       date,
     }
 
@@ -161,6 +170,22 @@ export function TransactionForm({
                 {t === "expense" ? "🔴 Gasto" : "🟢 Entrada"}
               </button>
             ))}
+          </div>
+
+          <div className="space-y-1.5">
+            <Label>Coleção</Label>
+            <Select value={collectionId} onValueChange={setCollectionId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione" />
+              </SelectTrigger>
+              <SelectContent>
+                {collections.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.icon} {c.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-1.5">

@@ -30,9 +30,16 @@ export function TransactionList({
   store: FinanceStore
   rates: RatesStore
 }) {
-  const { transactions, categoriesById, categories, deleteTransaction } = store
+  const { transactions, categoriesById, collectionsById, categories, deleteTransaction } =
+    store
   const [filter, setFilter] = useState("all")
   const [editing, setEditing] = useState<Transaction | null>(null)
+
+  // Só vale mostrar a coleção em cada linha quando a lista mistura mais de uma.
+  const showCollection = useMemo(
+    () => new Set(transactions.map((t) => t.collectionId)).size > 1,
+    [transactions]
+  )
 
   const filtered = useMemo(() => {
     if (filter === "all") return transactions
@@ -82,8 +89,15 @@ export function TransactionList({
                     <p className="truncate text-sm font-medium">
                       {t.description}
                     </p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="truncate text-xs text-muted-foreground">
                       {cat?.name ?? "Sem categoria"} · {formatDate(t.date)}
+                      {showCollection && (
+                        <>
+                          {" · "}
+                          {collectionsById.get(t.collectionId)?.icon}{" "}
+                          {collectionsById.get(t.collectionId)?.name ?? "Sem coleção"}
+                        </>
+                      )}
                     </p>
                   </div>
                   <div className="shrink-0 text-right">

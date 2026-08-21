@@ -14,6 +14,7 @@ import {
 import { AccountDialog, SyncBadge } from "@/components/AccountDialog"
 import { WhaleMark } from "@/components/WhaleMark"
 import { CategoryManager } from "@/components/CategoryManager"
+import { CollectionChips } from "@/components/CollectionSwitcher"
 import { ReloadButton } from "@/components/ReloadButton"
 import { ExpenseCharts } from "@/components/ExpenseCharts"
 import { TransactionForm } from "@/components/TransactionForm"
@@ -32,16 +33,26 @@ type View = "home" | "charts" | "list"
 
 export function MobileApp({
   store,
+  scoped,
   rates,
   auth,
   theme,
   onToggleTheme,
+  selectedCollection,
+  onSelectCollection,
+  defaultCollectionId,
 }: {
+  /** Store completo — usado pelos formulários e pelos chips de coleção. */
   store: FinanceStore
+  /** Store já filtrado pela coleção em foco — usado pelas telas de leitura. */
+  scoped: FinanceStore
   rates: RatesStore
   auth: AuthStore
   theme: "light" | "dark"
   onToggleTheme: () => void
+  selectedCollection: string
+  onSelectCollection: (id: string) => void
+  defaultCollectionId?: string
 }) {
   const [view, setView] = useState<View>("home")
   const [formOpen, setFormOpen] = useState(false)
@@ -50,12 +61,29 @@ export function MobileApp({
     <div className="min-h-[100dvh]">
       {/* Sem header fixo: o conteúdo começa direto, com folga para a ilha. */}
       <main className="px-5 pb-[calc(env(safe-area-inset-bottom)+7.5rem)] pt-[calc(env(safe-area-inset-top)+1.5rem)]">
-        {view === "home" && <HomeView store={store} rates={rates} auth={auth} theme={theme} onToggleTheme={onToggleTheme} onSeeAll={() => setView("list")} />}
+        {view === "home" && (
+          <HomeView
+            store={store}
+            scoped={scoped}
+            rates={rates}
+            auth={auth}
+            theme={theme}
+            onToggleTheme={onToggleTheme}
+            selectedCollection={selectedCollection}
+            onSelectCollection={onSelectCollection}
+            onSeeAll={() => setView("list")}
+          />
+        )}
 
         {view === "charts" && (
           <section className="space-y-4">
             <ViewTitle title="Gráficos" subtitle="Para onde seu dinheiro está indo" />
-            <ExpenseCharts store={store} />
+            <CollectionChips
+              store={store}
+              selected={selectedCollection}
+              onSelect={onSelectCollection}
+            />
+            <ExpenseCharts store={scoped} />
           </section>
         )}
 
@@ -64,13 +92,18 @@ export function MobileApp({
             <div className="flex items-start justify-between gap-3">
               <ViewTitle
                 title="Lançamentos"
-                subtitle={`${store.transactions.length} registro${
-                  store.transactions.length === 1 ? "" : "s"
+                subtitle={`${scoped.transactions.length} registro${
+                  scoped.transactions.length === 1 ? "" : "s"
                 }`}
               />
               <CategoryManager store={store} />
             </div>
-            <TransactionList store={store} rates={rates} />
+            <CollectionChips
+              store={store}
+              selected={selectedCollection}
+              onSelect={onSelectCollection}
+            />
+            <TransactionList store={scoped} rates={rates} />
           </section>
         )}
       </main>
@@ -82,6 +115,7 @@ export function MobileApp({
         open={formOpen}
         onOpenChange={setFormOpen}
         trigger={null}
+        defaultCollectionId={defaultCollectionId}
       />
 
       <Island
@@ -106,20 +140,26 @@ function ViewTitle({ title, subtitle }: { title: string; subtitle: string }) {
 
 function HomeView({
   store,
+  scoped,
   rates,
   auth,
   theme,
   onToggleTheme,
+  selectedCollection,
+  onSelectCollection,
   onSeeAll,
 }: {
   store: FinanceStore
+  scoped: FinanceStore
   rates: RatesStore
   auth: AuthStore
   theme: "light" | "dark"
   onToggleTheme: () => void
+  selectedCollection: string
+  onSelectCollection: (id: string) => void
   onSeeAll: () => void
 }) {
-  const totals = totalsByCurrency(store.transactions)
+  const totals = totalsByCurrency(scoped.transactions)
   const consolidated = totals.reduce(
     (acc, t) => {
       acc.income += rates.convertToBRL(t.income, t.currency)
@@ -129,7 +169,7 @@ function HomeView({
     { income: 0, expense: 0 }
   )
   const balance = consolidated.income - consolidated.expense
-  const recent = store.transactions.slice(0, 5)
+  const recent = scoped.transactions.slice(0, 5)
 
   return (
     <div className="space-y-7">
@@ -155,6 +195,12 @@ function HomeView({
           </Button>
         </div>
       </header>
+
+      <CollectionChips
+        store={store}
+        selected={selectedCollection}
+        onSelect={onSelectCollection}
+      />
 
       <section>
         <p className="text-sm text-muted-foreground">Saldo total</p>
@@ -189,7 +235,7 @@ function HomeView({
       <section>
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-base font-semibold">Últimos lançamentos</h2>
-          {store.transactions.length > recent.length && (
+          {scoped.transactions.length > recent.length && (
             <button
               type="button"
               onClick={onSeeAll}
@@ -212,7 +258,7 @@ function HomeView({
         ) : (
           <ul className="mt-3 space-y-2">
             {recent.map((t) => {
-              const cat = store.categoriesById.get(t.categoryId)
+              const cat = scoped.categoriesById.get(t.categoryId)
               const isExpense = t.type === "expense"
               return (
                 <li
